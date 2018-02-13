@@ -1,5 +1,7 @@
 package com.github.aworldwithoutcsharp.returntotown.main;
 
+import com.github.aworldwithoutcsharp.returntotown.main.scenes.Tutorial;
+
 import java.util.Scanner;
 
 /*
@@ -19,18 +21,18 @@ import java.util.Scanner;
  */
 
 public class Core {
-    private static final String PROMPT_SEPARATOR = "";
+    private static final String PROMPT = "> ";
 
     private static Scanner in = new Scanner(System.in);
     public static String input() {
+        System.out.print(PROMPT);
         return in.nextLine();
     }
-    public static String input(String prompt) {
-        System.out.print(prompt + PROMPT_SEPARATOR);
-        return in.nextLine();
+    private void run() {
+        Tutorial.run();
     }
 
     public static void main(String[] args) {
-
+        new Core().run();
     }
 }
