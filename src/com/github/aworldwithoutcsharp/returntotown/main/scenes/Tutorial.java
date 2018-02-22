@@ -3,6 +3,7 @@ package com.github.aworldwithoutcsharp.returntotown.main.scenes;
 import com.github.aworldwithoutcsharp.returntotown.main.Core;
 
 public class Tutorial {
+
     private static String createOutput() {
         String output = "";
         return output;
