@@ -1,9 +1,7 @@
 package com.github.aworldwithoutcsharp.returntotown.main.entities;
 
-import com.github.aworldwithoutcsharp.returntotown.main.Core;
-
 public class Entity {
-    public Core.Location location;
+    public int x, y;
     private int health = 100;
 
     public void damage(int amount) {
