@@ -54,10 +54,14 @@ public class Core {
                 new ArgumentDefinition("command", ArgumentType.COMMAND_NAME, true)
         }) {    
             @Override
-            public void perform() {
-                // iterate over all CommandDefinition instances
-                for (CommandDefinition def : values()) {
-                    System.out.println(def.getUsage());
+            public void perform(String[] args) {
+                if (args.length == 0) {
+                    // iterate over all CommandDefinition instances
+                    for (CommandDefinition def : values()) {
+                        System.out.println(def.getUsage());
+                    }
+                } else {
+                    System.out.println(CommandDefinition.valueOf(args[0].toUpperCase()).getUsage());
                 }
             }
         },
@@ -65,7 +69,7 @@ public class Core {
                 new ArgumentDefinition("target", ArgumentType.OBJECT, false)
         }) {
             @Override
-            public void perform() {
+            public void perform(String[] args) {
                 // TODO: make it VARY
                 System.out.println("The poster reads, 'Nice Job! You not only can follow simple instructions, but you can also read! Now remember, you are at a party, so stop reading signs and ionteract with the PATRONS you invited!'");
             }
@@ -96,7 +100,12 @@ public class Core {
         public ArgumentDefinition[] getArguments() {
             return arguments;
         }
-        public void perform() {}
+
+        /**
+         *
+         * @param args the list of argument values the USER provides
+         */
+        public void perform(String[] args) {}
     }
     public static class UserCommand {
         private CommandDefinition def;
