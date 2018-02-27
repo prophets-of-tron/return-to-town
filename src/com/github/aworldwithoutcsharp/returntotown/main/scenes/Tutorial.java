@@ -20,10 +20,10 @@ public class Tutorial {
             System.out.println(output);
             input = Core.input();
         }
-        while (input = "Interact(POSTER)") {
+        while (input.equals("Interact(POSTER)")) {
             String output = createOutput("The poster reads, 'Nice Job! You not only can follow simple instructions, but you can also read! Now remember, you are at a party, so stop reading signs and ionteract with the PATRONS you invited!'");
             System.out.println(output);
-            input = Core.input();
+            input == Core.input();
         }
     }
 }
