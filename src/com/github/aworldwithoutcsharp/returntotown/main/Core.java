@@ -47,11 +47,11 @@ import java.util.Scanner;
  */
 
 public class Core {
-    public enum Location {
+    public enum Location;{
         // tutorial
 
         // game
-        FOREST
+        FOREST;
     }
     private static final String PROMPT = "> ";
 
