@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="cc546eb4-2ddd-48f9-8c6d-38e898a16375" name="Default" comment="">
-      <change beforePath="" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change beforePath="$PROJECT_DIR$/src/com/github/aworldwithoutcsharp/returntotown/main/scenes/Tutorial.java" afterPath="$PROJECT_DIR$/src/com/github/aworldwithoutcsharp/returntotown/main/scenes/Tutorial.java" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
@@ -30,8 +31,8 @@
       <file leaf-file-name="Tutorial.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/com/github/aworldwithoutcsharp/returntotown/main/scenes/Tutorial.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="238">
-              <caret line="14" column="335" lean-forward="false" selection-start-line="14" selection-start-column="335" selection-end-line="14" selection-end-column="335" />
+            <state relative-caret-position="425">
+              <caret line="25" column="31" lean-forward="false" selection-start-line="25" selection-start-column="31" selection-end-line="25" selection-end-column="31" />
               <folding />
             </state>
           </provider>
@@ -42,11 +43,7 @@
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="0">
               <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-              <folding>
-                <marker date="1519759892562" expanded="true" signature="31028:31045" ph="..." />
-                <marker date="1519759892562" expanded="true" signature="31028:31063" ph="..." />
-                <marker date="1519759892562" expanded="true" signature="31028:31076" ph="..." />
-              </folding>
+              <folding />
             </state>
           </provider>
         </entry>
@@ -178,12 +175,12 @@
       <option name="VM_PARAMETERS" value="" />
       <option name="PROGRAM_PARAMETERS" value="" />
       <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
-      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
-      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
+      <option name="ALTERNATIVE_JRE_PATH" value="C:/Program Files/Java/jre-9.0.4" />
       <option name="ENABLE_SWING_INSPECTOR" value="false" />
       <option name="ENV_VARIABLES" />
       <option name="PASS_PARENT_ENVS" value="true" />
-      <module name="ReturnToTown" />
+      <module name="" />
       <envs />
     </configuration>
     <configuration default="true" type="Application" factoryName="Application">
@@ -282,7 +279,14 @@
       <option name="project" value="LOCAL" />
       <updated>1518554427683</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="create tutorial class">
+      <created>1519760136934</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1519760136934</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -547,11 +551,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding>
-            <marker date="1519759892562" expanded="true" signature="31028:31045" ph="..." />
-            <marker date="1519759892562" expanded="true" signature="31028:31063" ph="..." />
-            <marker date="1519759892562" expanded="true" signature="31028:31076" ph="..." />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -701,8 +701,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/com/github/aworldwithoutcsharp/returntotown/main/scenes/Tutorial.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="238">
-          <caret line="14" column="335" lean-forward="false" selection-start-line="14" selection-start-column="335" selection-end-line="14" selection-end-column="335" />
+        <state relative-caret-position="425">
+          <caret line="25" column="31" lean-forward="false" selection-start-line="25" selection-start-column="31" selection-end-line="25" selection-end-column="31" />
           <folding />
         </state>
       </provider>
@@ -747,7 +747,7 @@
       </state>
       <state key="JdkListConfigurable.UI">
         <settings>
-          <last-edited>my_JDK_1.8.0</last-edited>
+          <last-edited>9.0 (1)</last-edited>
           <splitter-proportions>
             <option name="proportions">
               <list>
@@ -764,7 +764,6 @@
             <option name="proportions">
               <list>
                 <option value="0.2" />
-                <option value="0.6" />
               </list>
             </option>
           </splitter-proportions>
