@@ -60,6 +60,15 @@ public class Core {
                     System.out.println(def.getUsage());
                 }
             }
+        },
+        INTERACT("int", new ArgumentDefinition[]{
+                new ArgumentDefinition("target", ArgumentType.OBJECT, false)
+        }) {
+            @Override
+            public void perform() {
+                // TODO: make it VARY
+                System.out.println("The poster reads, 'Nice Job! You not only can follow simple instructions, but you can also read! Now remember, you are at a party, so stop reading signs and ionteract with the PATRONS you invited!'");
+            }
         };
 
         private String name;
@@ -104,7 +113,7 @@ public class Core {
         }
     }
     private enum ArgumentType {
-        COMMAND_NAME
+        OBJECT, COMMAND_NAME
     }
     private static class ArgumentDefinition {
         private String name;
