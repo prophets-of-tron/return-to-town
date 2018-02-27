@@ -49,8 +49,8 @@ import java.util.Scanner;
 
 public class Core {
     public enum CommandDefinition {
-        EXIT("exit", new ArgumentDefinition[]{}),
-        HELP("help", new ArgumentDefinition[]{
+        EXIT("exit", "stop playing", new ArgumentDefinition[]{}),
+        HELP("help", "prints out command(s)", new ArgumentDefinition[]{
                 new ArgumentDefinition("command", ArgumentType.COMMAND_NAME, true)
         }) {    
             @Override
@@ -59,14 +59,17 @@ public class Core {
                     // iterate over all CommandDefinition instances
                     for (CommandDefinition def : values()) {
                         System.out.println(def.getUsage());
+                        System.out.println("---"+def.getDescription());
                     }
                 } else {
-                    System.out.println(CommandDefinition.valueOf(args[0].toUpperCase()).getUsage());
+                    CommandDefinition def = CommandDefinition.valueOf(args[0].toUpperCase());
+                    System.out.println(def.getUsage());
+                    System.out.println("---"+def.getDescription());
                 }
             }
         },
-        INTERACT("int", new ArgumentDefinition[]{
-                new ArgumentDefinition("target", ArgumentType.OBJECT, false)
+        INTERACT("int", "interact with the world", new ArgumentDefinition[]{
+                new ArgumentDefinition("target", ArgumentType.ENTITY, false)
         }) {
             @Override
             public void perform(String[] args) {
@@ -76,10 +79,18 @@ public class Core {
         };
 
         private String name;
+        private String description;
         private ArgumentDefinition[] arguments;
-        CommandDefinition(String name, ArgumentDefinition[] arguments) {
+        CommandDefinition(String name, String description, ArgumentDefinition[] arguments) {
             this.name = name;
+            this.description = description;
             this.arguments = arguments;
+        }
+        public String getName() {
+            return name;
+        }
+        public String getDescription() {
+            return description;
         }
         public String getUsage() {
             StringBuilder sb = new StringBuilder();
@@ -122,7 +133,7 @@ public class Core {
         }
     }
     private enum ArgumentType {
-        OBJECT, COMMAND_NAME
+        ENTITY, COMMAND_NAME
     }
     private static class ArgumentDefinition {
         private String name;
@@ -157,8 +168,13 @@ public class Core {
     private static UserCommand parseInput(String s) {
         if (s.length() == 0) return null;
         String[] words = s.split(" ");
-        CommandDefinition type = CommandDefinition.valueOf(words[0].toUpperCase());
-        for (ArgumentDefinition argument : type.getArguments()) {
+        CommandDefinition definition = null;
+        String commandName = words[0];
+        for (CommandDefinition def : CommandDefinition.values()) {
+            if (def.getName().equals(commandName)) definition = def;
+        }
+
+        for (ArgumentDefinition argument : definition.getArguments()) {
             // TODO: compare argument.getDefinition() to ArgumentType.fromInput(String)
             // TODO: create static ArgumentType[] ArgumentType.fromInput(String)
         }
@@ -166,7 +182,7 @@ public class Core {
         if (words.length > 1) {
             for (int i=1; i<words.length; i++) args[i-1] = words[i];
         }
-        return new UserCommand(type, args);
+        return new UserCommand(definition, args);
     }
     private static void run() {
         Tutorial.run();

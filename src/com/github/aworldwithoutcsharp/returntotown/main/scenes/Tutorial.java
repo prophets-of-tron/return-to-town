@@ -19,11 +19,10 @@ public class Tutorial {
             System.out.println(output);
             input = Core.input();
 
-            input.getDefinition().perform();    // will only do anything for the enum instances that have explicitely
-                                                // defined #perform(); see Core.CommandDefinition
+            input.getDefinition().perform(input.getArguments());    // will only do anything for the enum instances that have explicitely
+                                                                    // defined #perform(); see Core.CommandDefinition
         }
         while (input.equals("Interact(POSTER)")) {
-
             input = Core.input();
         }
     }
