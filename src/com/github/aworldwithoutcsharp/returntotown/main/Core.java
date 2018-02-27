@@ -48,43 +48,72 @@ import java.util.Scanner;
  */
 
 public class Core {
-    public enum CommandType {
-        EXIT(new ArgumentDefinition[]{}, "exit");
+    public enum CommandDefinition {
+        EXIT("exit", new ArgumentDefinition[]{}),
+        HELP("help", new ArgumentDefinition[]{
+                new ArgumentDefinition("command", ArgumentType.COMMAND_NAME, true)
+        }) {    
+            @Override
+            public void perform() {
+                // iterate over all CommandDefinition instances
+                for (CommandDefinition def : values()) {
+                    System.out.println(def.getUsage());
+                }
+            }
+        };
 
+        private String name;
         private ArgumentDefinition[] arguments;
-        private String usage;
-        CommandType(ArgumentDefinition[] arguments, String usage) {
+        CommandDefinition(String name, ArgumentDefinition[] arguments) {
+            this.name = name;
             this.arguments = arguments;
-            this.usage = usage;
+        }
+        public String getUsage() {
+            StringBuilder sb = new StringBuilder();
+            sb.append(name);
+            sb.append(' ');
+            for (ArgumentDefinition argumentDef : arguments) {
+                boolean opt = argumentDef.isOptional();
+                if (opt) sb.append('[');
+                sb.append('<');
+                sb.append(argumentDef.getName());
+                sb.append('>');
+                if (opt) sb.append(']');
+                sb.append('\n');
+            }
+            sb.deleteCharAt(sb.length()-1); // delete last newline
+            return sb.toString();
         }
         public ArgumentDefinition[] getArguments() {
             return arguments;
         }
-        public String getUsage() {
-            return usage;
-        }
+        public void perform() {}
     }
-    public static class Command {
-        private CommandType type;
+    public static class UserCommand {
+        private CommandDefinition def;
         private String[] arguments;
-        public Command(CommandType type, String[] arguments) {
-            this.type = type;
+        public UserCommand(CommandDefinition definition, String[] arguments) {
+            this.def = definition;
             this.arguments = arguments;
         }
-        public CommandType getType() {
-            return type;
+        public CommandDefinition getDefinition() {
+            return def;
         }
         public String[] getArguments() {
             return arguments;
         }
     }
-    private enum ArgumentType {}
+    private enum ArgumentType {
+        COMMAND_NAME
+    }
     private static class ArgumentDefinition {
         private String name;
         private ArgumentType type;
-        public ArgumentDefinition(String name, ArgumentType type) {
+        private boolean optional;
+        public ArgumentDefinition(String name, ArgumentType type, boolean optional) {
             this.name = name;
             this.type = type;
+            this.optional = optional;
         }
         public String getName() {
             return name;
@@ -92,37 +121,40 @@ public class Core {
         public ArgumentType getType() {
             return type;
         }
+        public boolean isOptional() {
+            return optional;
+        }
     }
 
     private static final String PROMPT = "> ";
 
     private static Scanner in = new Scanner(System.in);
-    public static Command input() {
+    public static UserCommand input() {
         return parseInput(rawInput());
     }
     private static String rawInput() {
         System.out.print(PROMPT);
         return in.nextLine();
     }
-    private static Command parseInput(String s) {
+    private static UserCommand parseInput(String s) {
         if (s.length() == 0) return null;
         String[] words = s.split(" ");
-        CommandType type = CommandType.valueOf(words[0].toUpperCase());
+        CommandDefinition type = CommandDefinition.valueOf(words[0].toUpperCase());
         for (ArgumentDefinition argument : type.getArguments()) {
-            // TODO: compare argument.getType() to ArgumentType.fromInput(String)
-            // TODO: create ArgumentType.fromInput(String)
+            // TODO: compare argument.getDefinition() to ArgumentType.fromInput(String)
+            // TODO: create static ArgumentType[] ArgumentType.fromInput(String)
         }
         String[] args = new String[words.length - 1];
         if (words.length > 1) {
             for (int i=1; i<words.length; i++) args[i-1] = words[i];
         }
-        return new Command(type, args);
+        return new UserCommand(type, args);
     }
-    private void run() {
+    private static void run() {
         Tutorial.run();
     }
 
     public static void main(String[] args) {
-       new Core().run();
+       Core.run();
     }
 }
