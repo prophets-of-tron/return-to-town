@@ -11,18 +11,21 @@ import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import com.googlecode.lanterna.terminal.Terminal;
-import com.googlecode.lanterna.terminal.TerminalFactory;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Stack;
+
+/*
+TODO: fix overflow cut-off, maybe be rearranging text on the resize event
+ */
 
 public class Console {
     public static Terminal terminal;
     public static TextGraphics textGraphics;
     static {
-        TerminalFactory terminalFactory = new DefaultTerminalFactory();
         try {
-            terminal = terminalFactory.createTerminal();
+            terminal = new DefaultTerminalFactory().createTerminal();
             terminal.enterPrivateMode();
             textGraphics = terminal.newTextGraphics();
         } catch (IOException e) {
@@ -45,9 +48,12 @@ public class Console {
         }
     }
 
+    /** history of commands entered */
+    private static Stack<String> history = new Stack<>();
+
     private static StringBuilder i;
     private static int p, positionSinceStartedTabbing;
-    private static int currentTabIndex;
+    private static int currentTabIndex, currentHistoryIndex;
     /** also for tabbing */
     private static KeyStroke keyStroke;
 
@@ -55,16 +61,45 @@ public class Console {
         try {
             print(PROMPT);
 
+            // reset static values
             i = new StringBuilder();
             p = 0;  // insertion position in `i`
+            positionSinceStartedTabbing = 0;
             currentTabIndex = -1;   // no current tab selection
+            currentHistoryIndex = -1;   // no current history selection
             keyStroke = null;
 
-            loop:
             do {
                 boolean breakLoop = false;
                 keyStroke = terminal.readInput();
                 switch (keyStroke.getKeyType()) {
+                    case ArrowUp: {
+                        if (currentHistoryIndex < history.size() - 1) {
+                            currentHistoryIndex++;
+                            String historyItem = history.get(currentHistoryIndex);
+                            // replace `i`'s text with that of `historyItem`
+                            clear(0, i.length());   // note that `clear` clears both the screen and the stringbuilder
+                            i.insert(0, historyItem);
+                            p = i.length();
+                        }
+                        break;
+                    }
+                    case ArrowDown: {
+                        if (currentHistoryIndex > 0) {
+                            currentHistoryIndex--;
+                            String historyItem = history.get(currentHistoryIndex);
+                            // replace `i`'s text with that of `historyItem`
+                            clear(0, i.length());
+                            i.insert(0, historyItem);
+                            p = i.length();
+                        } else if (currentHistoryIndex == 0) {
+                            currentHistoryIndex = -1;
+                            // clear `i`
+                            clear(0, i.length());
+                            p = 0;
+                        }
+                        break;
+                    }
                     case Escape: {
                         clear(0, i.length());
                         break;
@@ -72,6 +107,7 @@ public class Console {
                     case Enter: {
                         terminal.putCharacter('\n');
                         breakLoop = true;
+                        break;
                     }
                     case Backspace: {
                         if (p > 0) backspace();
@@ -113,7 +149,7 @@ public class Console {
                     currentTabIndex = -1;    // stop "tabbing"
                     positionSinceStartedTabbing = p;
                 }
-                if (breakLoop) break loop;
+                if (breakLoop) break;
 
                 TerminalPosition startPosition = terminal.getCursorPosition();
                 textGraphics.putString(startPosition.withColumn(PROMPT.length()), i.toString());
@@ -121,7 +157,9 @@ public class Console {
                 terminal.flush();
 
             } while (true);
-            return i.toString();
+            String s = i.toString();
+            history.push(s);
+            return s;
         } catch (IOException e) {
             e.printStackTrace();
         }
