@@ -1,29 +1,23 @@
 package com.github.aworldwithoutcsharp.returntotown.main.scenes;
 
-import com.github.aworldwithoutcsharp.returntotown.main.Core;
+import com.github.aworldwithoutcsharp.returntotown.main.command.UserCommand;
+import com.github.aworldwithoutcsharp.returntotown.main.io.Console;
 
 public class Tutorial {
 
-    private static String createOutput() {
-        String output = "";
-        return output;
-    }
-
     public static void run() {
-        System.out.println(
+        Console.println(
                 "Welcome to the tutorial!" + " " +
                  "This scene is designed to familiarize yourself with the text interface of this game... You will begin in a ballroom at a gala, with PATRONS of your pharmaceutical company all around. There is also a POSTER nearby, and there is a waiter coming your way with a tray of CHAMPAGNE. Try Interacting with the POSTER.");
-        Core.UserCommand input = null;
-        while (input != null ? input.getDefinition() != Core.CommandDefinition.EXIT : true) {
-            String output = createOutput();
-            System.out.println(output);
-            input = Core.input();
+        UserCommand input = null;
+        while (true) {
+            input = Console.input();
 
-            input.getDefinition().perform(input.getArguments());    // will only do anything for the enum instances that have explicitely
-                                                                    // defined #perform(); see Core.CommandDefinition
-        }
-        while (input.equals("Interact(POSTER)")) {
-            input = Core.input();
+            // this could be result in Core.exit(), so that's how we escape the loop
+            if (input != null)
+                input.getDefinition().perform(input.getArguments());    // will only do anything meaningful for the enum
+                                                                        // instances that have explicitely defined
+                                                                        // #perform(); see command.CommandDefinition
         }
     }
 }

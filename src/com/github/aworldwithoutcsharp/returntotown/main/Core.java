@@ -1,8 +1,19 @@
 package com.github.aworldwithoutcsharp.returntotown.main;
 
+import com.github.aworldwithoutcsharp.returntotown.main.command.Command;
+import com.github.aworldwithoutcsharp.returntotown.main.command.InvalidCommandException;
+import com.github.aworldwithoutcsharp.returntotown.main.command.UserCommand;
 import com.github.aworldwithoutcsharp.returntotown.main.scenes.Tutorial;
+import com.googlecode.lanterna.TerminalPosition;
+import com.googlecode.lanterna.TextColor;
+import com.googlecode.lanterna.graphics.TextGraphics;
+import com.googlecode.lanterna.input.KeyStroke;
+import com.googlecode.lanterna.input.KeyType;
+import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
+import com.googlecode.lanterna.terminal.Terminal;
+import com.googlecode.lanterna.terminal.TerminalFactory;
 
-import java.util.Scanner;
+import java.io.IOException;
 
 /*
  * TODO: {
@@ -48,147 +59,16 @@ import java.util.Scanner;
  */
 
 public class Core {
-    public enum CommandDefinition {
-        EXIT("exit", "stop playing", new ArgumentDefinition[]{}),
-        HELP("help", "prints out command(s)", new ArgumentDefinition[]{
-                new ArgumentDefinition("command", ArgumentType.COMMAND_NAME, true)
-        }) {    
-            @Override
-            public void perform(String[] args) {
-                if (args.length == 0) {
-                    // iterate over all CommandDefinition instances
-                    for (CommandDefinition def : values()) {
-                        System.out.println(def.getUsage());
-                        System.out.println("---"+def.getDescription());
-                    }
-                } else {
-                    CommandDefinition def = CommandDefinition.valueOf(args[0].toUpperCase());
-                    System.out.println(def.getUsage());
-                    System.out.println("---"+def.getDescription());
-                }
-            }
-        },
-        INTERACT("int", "interact with the world", new ArgumentDefinition[]{
-                new ArgumentDefinition("target", ArgumentType.ENTITY, false)
-        }) {
-            @Override
-            public void perform(String[] args) {
-                // TODO: make it VARY
-                System.out.println("The poster reads, 'Nice Job! You not only can follow simple instructions, but you can also read! Now remember, you are at a party, so stop reading signs and ionteract with the PATRONS you invited!'");
-            }
-        };
-
-        private String name;
-        private String description;
-        private ArgumentDefinition[] arguments;
-        CommandDefinition(String name, String description, ArgumentDefinition[] arguments) {
-            this.name = name;
-            this.description = description;
-            this.arguments = arguments;
-        }
-        public String getName() {
-            return name;
-        }
-        public String getDescription() {
-            return description;
-        }
-        public String getUsage() {
-            StringBuilder sb = new StringBuilder();
-            sb.append(name);
-            sb.append(' ');
-            for (ArgumentDefinition argumentDef : arguments) {
-                boolean opt = argumentDef.isOptional();
-                if (opt) sb.append('[');
-                sb.append('<');
-                sb.append(argumentDef.getName());
-                sb.append('>');
-                if (opt) sb.append(']');
-                sb.append('\n');
-            }
-            sb.deleteCharAt(sb.length()-1); // delete last newline
-            return sb.toString();
-        }
-        public ArgumentDefinition[] getArguments() {
-            return arguments;
-        }
-
-        /**
-         *
-         * @param args the list of argument values the USER provides
-         */
-        public void perform(String[] args) {}
-    }
-    public static class UserCommand {
-        private CommandDefinition def;
-        private String[] arguments;
-        public UserCommand(CommandDefinition definition, String[] arguments) {
-            this.def = definition;
-            this.arguments = arguments;
-        }
-        public CommandDefinition getDefinition() {
-            return def;
-        }
-        public String[] getArguments() {
-            return arguments;
-        }
-    }
-    private enum ArgumentType {
-        ENTITY, COMMAND_NAME
-    }
-    private static class ArgumentDefinition {
-        private String name;
-        private ArgumentType type;
-        private boolean optional;
-        public ArgumentDefinition(String name, ArgumentType type, boolean optional) {
-            this.name = name;
-            this.type = type;
-            this.optional = optional;
-        }
-        public String getName() {
-            return name;
-        }
-        public ArgumentType getType() {
-            return type;
-        }
-        public boolean isOptional() {
-            return optional;
-        }
-    }
-
-    private static final String PROMPT = "> ";
-
-    private static Scanner in = new Scanner(System.in);
-    public static UserCommand input() {
-        return parseInput(rawInput());
-    }
-    private static String rawInput() {
-        System.out.print(PROMPT);
-        return in.nextLine();
-    }
-    private static UserCommand parseInput(String s) {
-        if (s.length() == 0) return null;
-        String[] words = s.split(" ");
-        CommandDefinition definition = null;
-        String commandName = words[0];
-        for (CommandDefinition def : CommandDefinition.values()) {
-            if (def.getName().equals(commandName)) definition = def;
-        }
-
-        for (ArgumentDefinition argument : definition.getArguments()) {
-            // TODO: compare argument.getDefinition() to ArgumentType.fromInput(String)
-            // TODO: create static ArgumentType[] ArgumentType.fromInput(String)
-        }
-        String[] args = new String[words.length - 1];
-        if (words.length > 1) {
-            for (int i=1; i<words.length; i++) args[i-1] = words[i];
-        }
-        return new UserCommand(definition, args);
-    }
     private static void run() {
         Tutorial.run();
     }
 
+    public static void exit() {
+        // TODO: save changes as needed
+        System.exit(0);
+    }
+
     public static void main(String[] args) {
-       Core.run();
+        Core.run();
     }
 }
