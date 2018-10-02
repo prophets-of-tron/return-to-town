@@ -5,31 +5,80 @@ import com.github.aworldwithoutcsharp.returntotown.main.command.CommandDefinitio
 import com.github.aworldwithoutcsharp.returntotown.main.command.InvalidCommandException;
 import com.github.aworldwithoutcsharp.returntotown.main.command.UserCommand;
 import com.googlecode.lanterna.TerminalPosition;
+import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.graphics.TextGraphics;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import com.googlecode.lanterna.terminal.Terminal;
+import com.googlecode.lanterna.terminal.TerminalResizeListener;
+import com.googlecode.lanterna.terminal.swing.SwingTerminalFrame;
 
-import java.io.IOException;
+import javax.swing.*;
 import java.util.List;
 import java.util.Stack;
 
 /*
-TODO: fix overflow cut-off, maybe be rearranging text on the resize event
+ * FIXME: fix overflow cut-off (again, because I lost all my code and now I'm starting from this point),
+ * FIXME    maybe be rearranging text on the resize event
+ * FIXME: add space after command name and arguments with tab completion
  */
 
 public class Console {
-    public static Terminal terminal;
+    public static SwingTerminalFrame terminal;
     public static TextGraphics textGraphics;
-    static {
-        try {
-            terminal = new DefaultTerminalFactory().createTerminal();
-            terminal.enterPrivateMode();
-            textGraphics = terminal.newTextGraphics();
-        } catch (IOException e) {
-            e.printStackTrace();
+
+    /**
+     * Starts the text engine
+     * @param title the title of the <code>JFrame</code>
+     * @param callback will run after resizing (on linux, at least, this matters), or immediately if no resizing is done
+     */
+    public static void init(String title, Runnable callback) {
+        terminal = new DefaultTerminalFactory()
+                .createSwingTerminal();
+        terminal.setVisible(true);
+        terminal.setTitle(title);
+        terminal.enterPrivateMode();
+        textGraphics = terminal.newTextGraphics();
+
+        while (true) {
+            print("Launch in fullscreen? [Y/n] ");
+            KeyStroke keyStroke = terminal.readInput();
+            terminal.putCharacter('\n');
+            terminal.flush();
+            char yesNo = keyStroke.getCharacter();
+            if (keyStroke.getKeyType() == KeyType.Enter) yesNo = 'y';  // default to 'y' (yes)
+            if (yesNo == 'y' || yesNo == 'Y') {
+                terminal.clearScreen();
+                // run callback *when done resizing* (in case it resizes smoothly)
+                terminal.addResizeListener(new TerminalResizeListener() {
+                    @Override
+                    public void onResized(Terminal terminal, TerminalSize terminalSize) {
+                        // we're on the EDT thread (because Swing), so run in another thread
+                        // (try not doing this and see wh)
+                        new Thread(callback).start();
+                        // terminal.removeResizeListener modifies the array while inside a for-each loop (it must be)
+                        // in Lanterna's code
+                        SwingUtilities.invokeLater(new Runnable() {
+                            TerminalResizeListener resizeListener;  // I know, it's gross
+                            Runnable setResizeListener(TerminalResizeListener resizeListener) {
+                                this.resizeListener = resizeListener;
+                                return this;
+                            }
+                            @Override
+                            public void run() {
+                                terminal.removeResizeListener(resizeListener);    // only run once
+                            }
+                        }.setResizeListener(this));
+                    }
+                });
+                terminal.setExtendedState(JFrame.MAXIMIZED_BOTH);   // maximize, dummy
+                break;
+            } else if (yesNo == 'n' || yesNo == 'N') {
+                callback.run(); // call immediately, as no resize is being done
+                break;
+            }
         }
     }
 
@@ -58,114 +107,109 @@ public class Console {
     private static KeyStroke keyStroke;
 
     private static String rawInput() {
-        try {
-            print(PROMPT);
+        print(PROMPT);
 
-            // reset static values
-            i = new StringBuilder();
-            p = 0;  // insertion position in `i`
-            positionSinceStartedTabbing = 0;
-            currentTabIndex = -1;   // no current tab selection
-            currentHistoryIndex = -1;   // no current history selection
-            keyStroke = null;
+        // reset static values
+        i = new StringBuilder();
+        p = 0;  // insertion position in `i`
+        positionSinceStartedTabbing = 0;
+        currentTabIndex = -1;   // no current tab selection
+        currentHistoryIndex = -1;   // no current history selection
+        keyStroke = null;
 
-            do {
-                boolean breakLoop = false;
-                keyStroke = terminal.readInput();
-                switch (keyStroke.getKeyType()) {
-                    case ArrowUp: {
-                        if (currentHistoryIndex < history.size() - 1) {
-                            currentHistoryIndex++;
-                            String historyItem = history.get(currentHistoryIndex);
-                            // replace `i`'s text with that of `historyItem`
-                            clear(0, i.length());   // note that `clear` clears both the screen and the stringbuilder
-                            i.insert(0, historyItem);
-                            p = i.length();
-                        }
-                        break;
+        do {
+            boolean breakLoop = false;
+            keyStroke = terminal.readInput();
+            switch (keyStroke.getKeyType()) {
+                case ArrowUp: {
+                    if (currentHistoryIndex < history.size() - 1) {
+                        currentHistoryIndex++;
+                        String historyItem = history.get(currentHistoryIndex);
+                        // replace `i`'s text with that of `historyItem`
+                        clear(0, i.length());   // note that `clear` clears both the screen and the stringbuilder
+                        i.insert(0, historyItem);
+                        p = i.length();
                     }
-                    case ArrowDown: {
-                        if (currentHistoryIndex > 0) {
-                            currentHistoryIndex--;
-                            String historyItem = history.get(currentHistoryIndex);
-                            // replace `i`'s text with that of `historyItem`
-                            clear(0, i.length());
-                            i.insert(0, historyItem);
-                            p = i.length();
-                        } else if (currentHistoryIndex == 0) {
-                            currentHistoryIndex = -1;
-                            // clear `i`
-                            clear(0, i.length());
-                            p = 0;
-                        }
-                        break;
-                    }
-                    case Escape: {
+                    break;
+                }
+                case ArrowDown: {
+                    if (currentHistoryIndex > 0) {
+                        currentHistoryIndex--;
+                        String historyItem = history.get(currentHistoryIndex);
+                        // replace `i`'s text with that of `historyItem`
                         clear(0, i.length());
-                        break;
+                        i.insert(0, historyItem);
+                        p = i.length();
+                    } else if (currentHistoryIndex == 0) {
+                        currentHistoryIndex = -1;
+                        // clear `i`
+                        clear(0, i.length());
+                        p = 0;
                     }
-                    case Enter: {
-                        terminal.putCharacter('\n');
-                        breakLoop = true;
-                        break;
-                    }
-                    case Backspace: {
-                        if (p > 0) backspace();
-                        else {
-                            // maybe play a mellow beep like PowerShell
-                        }
-                        break;
-                    }
-                    case Delete: {
-                        if (p < i.length()) {
-                            // TODO: check if this works
-                            int numbCharsForward = (p < i.length()-1) ? 1 : 0;
-                            p += numbCharsForward + 1;
-                            backspace();
-                            p -= numbCharsForward;
-                        }
-                        break;
-                    }
-                    case ArrowLeft: {
-                        if (p > 0) p--;
-                        break;
-                    }
-                    case ArrowRight: {
-                        if (p < i.length()) p++;
-                        break;
-                    }
-                    case Tab: {
-                        tab();
-                        break;
-                    }
-                    default: {
-                        char c = keyStroke.getCharacter();
-                        i.insert(p, c);
-                        p++;
-                        break;
-                    }
+                    break;
                 }
-                if (keyStroke.getKeyType() != KeyType.Tab) {
-                    currentTabIndex = -1;    // stop "tabbing"
-                    positionSinceStartedTabbing = p;
+                case Escape: {
+                    clear(0, i.length());
+                    break;
                 }
-                if (breakLoop) break;
+                case Enter: {
+                    terminal.putCharacter('\n');
+                    breakLoop = true;
+                    break;
+                }
+                case Backspace: {
+                    if (p > 0) backspace();
+                    else {
+                        // maybe play a mellow beep like PowerShell
+                    }
+                    break;
+                }
+                case Delete: {
+                    if (p < i.length()) {
+                        // TODO: check if this works
+                        int numbCharsForward = (p < i.length()-1) ? 1 : 0;
+                        p += numbCharsForward + 1;
+                        backspace();
+                        p -= numbCharsForward;
+                    }
+                    break;
+                }
+                case ArrowLeft: {
+                    if (p > 0) p--;
+                    break;
+                }
+                case ArrowRight: {
+                    if (p < i.length()) p++;
+                    break;
+                }
+                case Tab: {
+                    tab();
+                    break;
+                }
+                default: {
+                    char c = keyStroke.getCharacter();
+                    i.insert(p, c);
+                    p++;
+                    break;
+                }
+            }
+            if (keyStroke.getKeyType() != KeyType.Tab) {
+                currentTabIndex = -1;    // stop "tabbing"
+                positionSinceStartedTabbing = p;
+            }
+            if (breakLoop) break;
 
-                TerminalPosition startPosition = terminal.getCursorPosition();
-                textGraphics.putString(startPosition.withColumn(PROMPT.length()), i.toString());
-                terminal.setCursorPosition(startPosition.withColumn(PROMPT.length() + p));
-                terminal.flush();
+            TerminalPosition startPosition = terminal.getCursorPosition();
+            textGraphics.putString(startPosition.withColumn(PROMPT.length()), i.toString());
+            terminal.setCursorPosition(startPosition.withColumn(PROMPT.length() + p));
+            terminal.flush();
 
-            } while (true);
-            String s = i.toString();
-            history.push(s);
-            return s;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        throw new RuntimeException("something went wrong!");
+        } while (true);
+        String s = i.toString();
+        history.push(s);
+        return s;
     }
-    private static void tab() throws IOException {
+    private static void tab() {
         List<String> suggestions = getSuggestions();
         if (suggestions == null || suggestions.size() == 0) return;
         currentTabIndex = (currentTabIndex + 1) % suggestions.size();
@@ -182,22 +226,24 @@ public class Console {
         /*
         Use CommandDefinition.HELP for tab completing when there is no full command name
          */
-        String str = i.substring(0, positionSinceStartedTabbing).toString();
+        String str = i.substring(0, positionSinceStartedTabbing);
         if (str.length() == 0) return CommandDefinition.HELP.tabComplete(0, "");
 
         String[] words = str.split(" ");
-        if (str.length() == 0) return CommandDefinition.HELP.tabComplete(0, "");
+        if (words.length == 0) return CommandDefinition.HELP.tabComplete(0, "");
 
         String commandNameStart = words[0];
         boolean newWord = isNewWord();
         int wordIndex = getRawCursorWordIndex(positionSinceStartedTabbing, words);
-        if (wordIndex == 0) return CommandDefinition.HELP.tabComplete(0, commandNameStart);
+
+        if (wordIndex == 0) {
+            List<String> commandSuggestions = CommandDefinition.HELP.tabComplete(0, commandNameStart);
+            if (!commandSuggestions.contains(commandNameStart)) return commandSuggestions;
+        }
 
         String beginning = wordIndex < words.length ? words[wordIndex] : "";
         int argIndex = (newWord ? words.length : words.length-1) - 1; // - 1 to exclude the command name
 
-        List<String> commandSuggestions = CommandDefinition.HELP.tabComplete(0, commandNameStart);
-        if (!commandSuggestions.contains(commandNameStart) && wordIndex == 0) return commandSuggestions;
         CommandDefinition commandDefinition = CommandDefinition.forName(commandNameStart);
 
         return commandDefinition.tabComplete(argIndex, beginning);
@@ -222,16 +268,15 @@ public class Console {
     private static boolean isNewWord() {
         return p > 0 && i.charAt(p-1) == ' ';
     }
-    private static void clear(int start, int end) throws IOException {
+    private static void clear(int start, int end) {
         // clear portion on terminal
         for (p=end; p>start; /*backspace() decrements `p`*/) backspace();
     }
 
     /**
      * Assumes <code>p &gt; 0</code>
-     * @throws IOException
      */
-    private static void backspace() throws IOException {
+    private static void backspace() {
         p--;
         // delete character in `i`
         i.deleteCharAt(p);
@@ -264,20 +309,12 @@ public class Console {
         writeln(s);
     }
     private static void write(String s) {
-        try {
-            textGraphics.putString(terminal.getCursorPosition(), s);
-            terminal.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        textGraphics.putString(terminal.getCursorPosition(), s);
+        terminal.flush();
     }
     private static void writeln(String s) {
-        try {
-            textGraphics.putString(terminal.getCursorPosition(), s);
-            terminal.putCharacter('\n');
-            terminal.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        textGraphics.putString(terminal.getCursorPosition(), s);
+        terminal.putCharacter('\n');
+        terminal.flush();
     }
 }

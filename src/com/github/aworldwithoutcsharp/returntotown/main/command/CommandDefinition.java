@@ -32,7 +32,7 @@ public enum CommandDefinition {
             // iterate over possible commands, because this is `help`
             // TODO: make it depend on the scene / "conditional" commands
             for (CommandDefinition command : values()) {
-                String lowerCase = command.toString().toLowerCase();
+                String lowerCase = command.getName().toLowerCase();
                 if(lowerCase.startsWith(beginning.toLowerCase())) suggestions.add(lowerCase);
             }
             return suggestions;
@@ -66,6 +66,7 @@ public enum CommandDefinition {
     public String getName() {
         return name;
     }
+    public String toString() { return name; }
     public String getDescription() {
         return description;
     }

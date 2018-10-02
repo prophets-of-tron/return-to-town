@@ -1,19 +1,7 @@
 package com.github.aworldwithoutcsharp.returntotown.main;
 
-import com.github.aworldwithoutcsharp.returntotown.main.command.Command;
-import com.github.aworldwithoutcsharp.returntotown.main.command.InvalidCommandException;
-import com.github.aworldwithoutcsharp.returntotown.main.command.UserCommand;
+import com.github.aworldwithoutcsharp.returntotown.main.io.Console;
 import com.github.aworldwithoutcsharp.returntotown.main.scenes.Tutorial;
-import com.googlecode.lanterna.TerminalPosition;
-import com.googlecode.lanterna.TextColor;
-import com.googlecode.lanterna.graphics.TextGraphics;
-import com.googlecode.lanterna.input.KeyStroke;
-import com.googlecode.lanterna.input.KeyType;
-import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
-import com.googlecode.lanterna.terminal.Terminal;
-import com.googlecode.lanterna.terminal.TerminalFactory;
-
-import java.io.IOException;
 
 /*
  * TODO: {
@@ -59,7 +47,15 @@ import java.io.IOException;
  */
 
 public class Core {
-    private static void run() {
+    private static void init() {
+        Console.init("Return to Town", new Runnable() {
+            @Override
+            public void run() {
+                runGame();
+            }
+        });
+    }
+    private static void runGame() {
         Tutorial.run();
     }
 
@@ -69,6 +65,6 @@ public class Core {
     }
 
     public static void main(String[] args) {
-        Core.run();
+        Core.init();
     }
 }
