@@ -158,28 +158,57 @@ public class Console {
                     break;
                 }
                 case Backspace: {
-                    if (p > 0) backspace();
-                    else {
-                        // maybe play a mellow beep like PowerShell
+                    // backspace whole word if keyStroke.isCtrlDown()
+                    boolean ranOnce = false;
+                    // always run once, no matter what
+                    // then, if .isCtrlDown(), run more times
+                    while (!ranOnce || (keyStroke.isCtrlDown() && !isNewWord())) {
+                        if (p > 0) backspace();
+                        else {
+                            // maybe play a mellow beep like PowerShell
+                            break;
+                        }
+                        ranOnce = true;
                     }
                     break;
                 }
                 case Delete: {
-                    if (p < i.length()) {
-                        // TODO: check if this works
-                        int numbCharsForward = (p < i.length()-1) ? 1 : 0;
-                        p += numbCharsForward + 1;
-                        backspace();
-                        p -= numbCharsForward;
+                    // delete whole word if keyStroke.isCtrlDown()
+                    boolean ranOnce = false;
+                    // always run once, no matter what
+                    // then, if .isCtrlDown(), run more times
+                    while (!ranOnce || (keyStroke.isCtrlDown() && !isNewWord())) {
+                        if (p < i.length()) {
+                            // TODO: check if this works
+                            int numbCharsForward = (p < i.length() - 1) ? 1 : 0;
+                            p += numbCharsForward + 1;
+                            backspace();
+                            p -= numbCharsForward;
+                        } else break;
+                        ranOnce = true;
                     }
                     break;
                 }
                 case ArrowLeft: {
-                    if (p > 0) p--;
+                    boolean ranOnce = false;
+                    // always run once, no matter what
+                    // then, if .isCtrlDown(), run more times
+                    while (!ranOnce || (keyStroke.isCtrlDown() && !isNewWord())) {
+                        if (p > 0) p--;
+                        else break;
+                        ranOnce = true;
+                    }
                     break;
                 }
                 case ArrowRight: {
-                    if (p < i.length()) p++;
+                    boolean ranOnce = false;
+                    // always run once, no matter what
+                    // then, if .isCtrlDown(), run more times
+                    while (!ranOnce || (keyStroke.isCtrlDown() && !isNewWord())) {
+                        if (p < i.length()) p++;
+                        else break;
+                        ranOnce = true;
+                    }
                     break;
                 }
                 case Tab: {
@@ -266,7 +295,7 @@ public class Console {
         throw new RuntimeException("yeah... something went wrong");
     }
     private static boolean isNewWord() {
-        return p > 0 && i.charAt(p-1) == ' ';
+        return p > 0 && i.charAt(p-1) == ' ';   // TODO: figure out this and working with "     word" as one word
     }
     private static void clear(int start, int end) {
         // clear portion on terminal
@@ -308,13 +337,31 @@ public class Console {
         textGraphics.setForegroundColor(TextColor.ANSI.RED);
         writeln(s);
     }
-    private static void write(String s) {
-        textGraphics.putString(terminal.getCursorPosition(), s);
+    public static void write(String s) {
+        put(s);
         terminal.flush();
     }
-    private static void writeln(String s) {
-        textGraphics.putString(terminal.getCursorPosition(), s);
+    public static void writeln(String s) {
+        put(s);
         terminal.putCharacter('\n');
         terminal.flush();
+    }
+    /** Writes the string to screen, breaking at words */
+    private static void put(String s) {
+        int w = terminal.getTerminalSize().getColumns(), h = terminal.getTerminalSize().getRows();
+        int x = terminal.getCursorPosition().getColumn(), y = terminal.getCursorPosition().getRow();
+
+        String[] words = s.split(" ", -1);// simple yet powerful; limit is to include trialing empty strings
+        for (int i=0; i<words.length; i++) {
+            String output = words[i] + (i < words.length-1 ? " " : "");
+            // move down a line, if necessary
+            if (x + output.length() > w) {
+                x = 0;
+                y++;
+            }
+            textGraphics.putString(new TerminalPosition(x, y), output);
+
+            x += output.length();
+        }
     }
 }

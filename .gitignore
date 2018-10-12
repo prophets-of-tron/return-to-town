@@ -1,6 +1,6 @@
 out/
 .idea/
-ReturnToTown.iml
+*.iml
 
 # Windows image file caches
 Thumbs.db
