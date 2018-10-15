@@ -16,13 +16,11 @@ import com.googlecode.lanterna.terminal.TerminalResizeListener;
 import com.googlecode.lanterna.terminal.swing.SwingTerminalFrame;
 
 import javax.swing.*;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 
 /*
- * FIXME: fix overflow cut-off (again, because I lost all my code and now I'm starting from this point),
- * FIXME    maybe be rearranging text on the resize event
  * FIXME: add space after command name and arguments with tab completion
+ * TODO: indent output on multiline?
  */
 
 public class Console {
@@ -76,6 +74,7 @@ public class Console {
                 terminal.setExtendedState(JFrame.MAXIMIZED_BOTH);   // maximize, dummy
                 break;
             } else if (yesNo == 'n' || yesNo == 'N') {
+                terminal.clearScreen();
                 callback.run(); // call immediately, as no resize is being done
                 break;
             }
@@ -229,8 +228,8 @@ public class Console {
             if (breakLoop) break;
 
             TerminalPosition startPosition = terminal.getCursorPosition();
-            textGraphics.putString(startPosition.withColumn(PROMPT.length()), i.toString());
-            terminal.setCursorPosition(startPosition.withColumn(PROMPT.length() + p));
+            terminal.setCursorPosition(startPosition.withColumn(PROMPT.length()));
+            print(i.toString());
             terminal.flush();
 
         } while (true);
@@ -244,7 +243,7 @@ public class Console {
         currentTabIndex = (currentTabIndex + 1) % suggestions.size();
         String currentSuggestion = suggestions.get(currentTabIndex);
 
-        int f = floorToWord(p, i.toString().split(" "));
+        int f = floorToWord(p);
         clear(f, p);
         i.insert(p, currentSuggestion);
         // at the end of the main loop, `i` will be printed, so no need to do anything here
@@ -272,17 +271,22 @@ public class Console {
 
         String beginning = wordIndex < words.length ? words[wordIndex] : "";
         int argIndex = (newWord ? words.length : words.length-1) - 1; // - 1 to exclude the command name
+        try {
+            CommandDefinition commandDefinition = CommandDefinition.forName(commandNameStart);
+            return commandDefinition.tabComplete(argIndex, beginning);
+        } catch (NoSuchElementException e) {
+            return new ArrayList<>();   // the first word isn't a command (user entered it wrong)
+        }
 
-        CommandDefinition commandDefinition = CommandDefinition.forName(commandNameStart);
-
-        return commandDefinition.tabComplete(argIndex, beginning);
     }
-    private static int floorToWord(int c, String[] words) {
+    private static int floorToWord(int c) {
+        if (isNewWord()) return p; // if cursor (`p`) is at a new word, that's the beginning of the word
+        // multiple spaces are treated as one space
+        String s = i.toString();
+        String[] words = s.replaceAll(" +", " ").split(" ", -1);
         int wordIndex = getRawCursorWordIndex(c, words);
-        int accumulatedLength = 0;
-        for (int w=0; w<wordIndex; w++)
-            accumulatedLength += words[w].length() + (w<wordIndex-1?" ".length():0);
-        return accumulatedLength;
+        int charIndex = s.indexOf(words[wordIndex]);   // use indexOf to account for multiple spaces (see above)
+        return charIndex;   // this method doesn't preserve spaces before now
     }
     /** "raw" because it doesn't account for trailing spaces */
     private static int getRawCursorWordIndex(int c, String[] words) {
@@ -290,7 +294,7 @@ public class Console {
         int accumulatedLength = 0;
         for (int w=0; w<words.length; w++) {
             accumulatedLength += words[w].length();
-            if (c < accumulatedLength+" ".length()+1) return w + (newWord?1:0);
+            if (c < accumulatedLength+" ".length()+1) return w+(newWord?1:0);
         }
         throw new RuntimeException("yeah... something went wrong");
     }
@@ -351,9 +355,20 @@ public class Console {
         int w = terminal.getTerminalSize().getColumns(), h = terminal.getTerminalSize().getRows();
         int x = terminal.getCursorPosition().getColumn(), y = terminal.getCursorPosition().getRow();
 
-        String[] words = s.split(" ", -1);// simple yet powerful; limit is to include trialing empty strings
-        for (int i=0; i<words.length; i++) {
-            String output = words[i] + (i < words.length-1 ? " " : "");
+        // simple yet powerful; limit is to include trialing empty strings
+        List<String> words = new ArrayList<>(Arrays.asList(s.split(" ", -1)));
+        for (int i=0; i<words.size(); i++) {
+            String word = words.get(i);
+            while (word.length() > w) {
+                String line = word.substring(0, w);
+                // split into two list items
+                words.set(i, line);
+                words.add(i, word.substring(w));
+            }
+        }
+
+        for (int i=0; i<words.size(); i++) {
+            String output = words.get(i) + (i < words.size()-1 ? " " : "");
             // move down a line, if necessary
             if (x + output.length() > w) {
                 x = 0;
