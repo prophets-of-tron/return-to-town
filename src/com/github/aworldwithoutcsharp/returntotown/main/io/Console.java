@@ -20,7 +20,8 @@ import java.util.*;
 
 /*
  * FIXME: add space after command name and arguments with tab completion
- * TODO: indent output on multiline?
+ * TODO: indent output on multiline with `*`
+ * TODO? make not static
  */
 
 public class Console {
@@ -54,7 +55,7 @@ public class Console {
                     @Override
                     public void onResized(Terminal terminal, TerminalSize terminalSize) {
                         // we're on the EDT thread (because Swing), so run in another thread
-                        // (try not doing this and see wh)
+                        // (try not doing this and see why)
                         new Thread(callback).start();
                         // terminal.removeResizeListener modifies the array while inside a for-each loop (it must be)
                         // in Lanterna's code
@@ -117,6 +118,7 @@ public class Console {
         keyStroke = null;
 
         do {
+            int lastILength = i.length();   // before modifications from keystroke
             boolean breakLoop = false;
             keyStroke = terminal.readInput();
             switch (keyStroke.getKeyType()) {
@@ -176,7 +178,11 @@ public class Console {
                     boolean ranOnce = false;
                     // always run once, no matter what
                     // then, if .isCtrlDown(), run more times
-                    while (!ranOnce || (keyStroke.isCtrlDown() && !isNewWord())) {
+                    int end = p;    // specifically + 0
+                    if (keyStroke.isCtrlDown()) {
+                        while (!isNewWord(false, end)) end++;
+                    }
+                    while (!ranOnce || (keyStroke.isCtrlDown() && p <= end)) {  // <= or < ?
                         if (p < i.length()) {
                             // TODO: check if this works
                             int numbCharsForward = (p < i.length() - 1) ? 1 : 0;
@@ -229,7 +235,11 @@ public class Console {
 
             TerminalPosition startPosition = terminal.getCursorPosition();
             terminal.setCursorPosition(startPosition.withColumn(PROMPT.length()));
-            print(i.toString());
+            // clear last span of text, in case of deletion (so extraneous characters aren't preserved)
+            print(new String(new char[lastILength]).replace("\0", " "), false);
+            terminal.setCursorPosition(startPosition.withColumn(PROMPT.length()));  // reset after clearing
+            print(i.toString(), false);
+            terminal.setCursorPosition(startPosition.withColumn(PROMPT.length() + p));  // reset after printing
             terminal.flush();
 
         } while (true);
@@ -298,8 +308,25 @@ public class Console {
         }
         throw new RuntimeException("yeah... something went wrong");
     }
+
+    /**
+     * Calculates whether or not the cursor <code>p</code> is on a new word (after a space)
+     * @param right whether to search from the right (test if there is a space <em>at</em> the cursor, instead of
+     *              before) or not
+     * @param pos the cursor position
+     * @return <code>true</code> if there is a space before the cursor <em>and</em> the cursor isn't at the beginning
+     * and <code>false</code> otherwise
+     */
+    private static boolean isNewWord(boolean right, int pos) {
+        int dir = right ? 0 : -1;
+        boolean exceeds = right ? (pos >= i.length()) : (pos - 1 < 0);
+        return !exceeds && i.charAt(pos+dir) == ' ';   // TODO: figure out this and working with "     word" as one word
+    }
+    private static boolean isNewWord(boolean right) {
+        return isNewWord(right, p);
+    }
     private static boolean isNewWord() {
-        return p > 0 && i.charAt(p-1) == ' ';   // TODO: figure out this and working with "     word" as one word
+        return isNewWord(false);
     }
     private static void clear(int start, int end) {
         // clear portion on terminal
@@ -325,30 +352,48 @@ public class Console {
     OUTPUT
      */
 
-    public static void print(String s) {
+    public static void print(String s, boolean flush) {
         textGraphics.setForegroundColor(TextColor.ANSI.WHITE);
-        write(s);
+        write(s, flush);
+    }
+    public static void print(String s) {
+        print(s, true);
+    }
+    public static void println(String s, boolean flush) {
+        textGraphics.setForegroundColor(TextColor.ANSI.WHITE);
+        writeln(s, flush);
     }
     public static void println(String s) {
-        textGraphics.setForegroundColor(TextColor.ANSI.WHITE);
-        writeln(s);
+        println(s, true);
+    }
+    public static void error(String s, boolean flush) {
+        textGraphics.setForegroundColor(TextColor.ANSI.RED);
+        write(s, flush);
     }
     public static void error(String s) {
+        error(s, true);
+    }
+    public static void errorln(String s, boolean flush) {
         textGraphics.setForegroundColor(TextColor.ANSI.RED);
-        write(s);
+        writeln(s, flush);
     }
     public static void errorln(String s) {
-        textGraphics.setForegroundColor(TextColor.ANSI.RED);
-        writeln(s);
+        errorln(s, true);
+    }
+    public static void write(String s, boolean flush) {
+        put(s);
+        if (flush) terminal.flush();
     }
     public static void write(String s) {
-        put(s);
-        terminal.flush();
+        write(s, true);
     }
-    public static void writeln(String s) {
+    public static void writeln(String s, boolean flush) {
         put(s);
         terminal.putCharacter('\n');
-        terminal.flush();
+        if (flush) terminal.flush();
+    }
+    public static void writeln(String s) {
+        writeln(s, true);
     }
     /** Writes the string to screen, breaking at words */
     private static void put(String s) {

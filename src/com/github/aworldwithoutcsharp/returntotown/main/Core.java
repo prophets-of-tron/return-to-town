@@ -1,7 +1,7 @@
 package com.github.aworldwithoutcsharp.returntotown.main;
 
 import com.github.aworldwithoutcsharp.returntotown.main.io.Console;
-import com.github.aworldwithoutcsharp.returntotown.main.scenes.Tutorial;
+import com.github.aworldwithoutcsharp.returntotown.main.scenes.tutorial.Tutorial;
 
 /*
  * TODO: {
@@ -11,7 +11,7 @@ import com.github.aworldwithoutcsharp.returntotown.main.scenes.Tutorial;
  *       - output:
  *         - details / paragraph
  *         - possibly formatted keywords??
- *     I. Tutorial [Gala]
+ *     I. TutorialData [Gala]
  *       A. Tasks
  *         1) make an order
  *         2) drink
@@ -19,7 +19,7 @@ import com.github.aworldwithoutcsharp.returntotown.main.scenes.Tutorial;
  *       B. Focus on...
  *         1) commands
  *         2) observation / using text output
- *     II. Game
+ *     II. GameData
  *       A. Basic Plot
  *         1) starts out in forest
  *         2) searches for clues

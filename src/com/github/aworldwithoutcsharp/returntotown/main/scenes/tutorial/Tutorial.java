@@ -1,4 +1,4 @@
-package com.github.aworldwithoutcsharp.returntotown.main.scenes;
+package com.github.aworldwithoutcsharp.returntotown.main.scenes.tutorial;
 
 import com.github.aworldwithoutcsharp.returntotown.main.command.UserCommand;
 import com.github.aworldwithoutcsharp.returntotown.main.io.Console;
@@ -13,7 +13,7 @@ public class Tutorial {
         while (true) {
             input = Console.input();
 
-            // this could be result in Core.exit(), so that's how we escape the loop
+            // this could result in Core.exit(), so that's how we escape the loop
             if (input != null)
                 input.getDefinition().perform(input.getArguments());    // will only do anything meaningful for the enum
                                                                         // instances that have explicitely defined

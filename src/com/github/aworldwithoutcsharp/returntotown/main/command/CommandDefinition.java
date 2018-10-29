@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.NoSuchElementException;
 
 public enum CommandDefinition {
+    // Global commands
     EXIT("exit", "stop playing", new ArgumentDefinition[]{}) {
         @Override
         public void perform(String[] args) {
@@ -38,20 +39,44 @@ public enum CommandDefinition {
             return suggestions;
         }
     },
-    INTERACT("int", "interact with an entity in the world", new ArgumentDefinition[]{
-            new ArgumentDefinition("target", ArgumentType.ENTITY)
-    }) {
+
+    // TileData- (location)-specific commands
+    OBSERVE("obs", "observe a tile in the game", new ArgumentDefinition[]{}) {
         @Override
         public void perform(String[] args) {
-            // TODO: make it VARY
-            Console.println("The poster reads, 'Nice Job! You not only can follow simple instructions, but you can also read! Now remember, you are at a party, so stop reading signs and ionteract with the PATRONS you invited!'");
+            // Do nothing, the TileData is responsible for this event, and if it does not handle it, it is not
+            // applicable, thus nothing happens. So, do nothing either way.
         }
 
         @Override
         public ArrayList<String> tabComplete(int argIndex, String beginning) {
-            ArrayList<String> suggestions = new ArrayList<>();
-            suggestions.add("TODO");
-            return suggestions;
+            return null;    // not applicable to TileData, silently ignore
+        }
+    },
+    INVESTIGATE("inv", "TODO", new ArgumentDefinition[]{}) {
+        @Override
+        public void perform(String[] args) {
+            // Do nothing, the TileData is responsible for this event, and if it does not handle it, it is not
+            // applicable, thus nothing happens. So, do nothing either way.
+        }
+
+        @Override
+        public ArrayList<String> tabComplete(int argIndex, String beginning) {
+            return null;    // not applicable to TileData, silently ignore
+        }
+    },
+    INTERACT("int", "interact with an entity in the game", new ArgumentDefinition[]{
+            new ArgumentDefinition("target", ArgumentType.ENTITY)
+    }) {
+        @Override
+        public void perform(String[] args) {
+            // Do nothing, the TileData is responsible for this event, and if it does not handle it, it is not
+            // applicable, thus nothing happens. So, do nothing either way.
+        }
+
+        @Override
+        public ArrayList<String> tabComplete(int argIndex, String beginning) {
+            return null;    // not applicable to TileData, silently ignore
         }
     };
 
