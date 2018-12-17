@@ -23,10 +23,6 @@ public class Tile {
                 output = tileData.observe;
                 break;
             }
-            case SEARCH: {
-                output = tileData.search;
-                break;
-            }
             case INTERACT: {
                 output = tileData.interact;
                 break;

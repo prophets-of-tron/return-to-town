@@ -21,6 +21,7 @@ import java.util.*;
 /*
  * FIXME: add space after command name and arguments with tab completion
  * TODO: indent output on multiline with `*`
+ * TODO: support newline, or does it already support it??
  * TODO? make not static
  */
 
@@ -248,9 +249,10 @@ public class Console {
         return s;
     }
     private static void tab() {
+        // TODO: add space after tab completion if it's the only option, or something like that?
         List<String> suggestions = getSuggestions();
         if (suggestions == null || suggestions.size() == 0) return;
-        currentTabIndex = (currentTabIndex + 1) % suggestions.size();
+        currentTabIndex = (currentTabIndex + 1) % suggestions.size();   // TODO: does this work changing size?
         String currentSuggestion = suggestions.get(currentTabIndex);
 
         int f = floorToWord(p);
@@ -260,34 +262,41 @@ public class Console {
 
         p += currentSuggestion.length();
     }
+
     private static List<String> getSuggestions() {
+        List<String> suggestions;
         /*
         Use CommandDefinition.HELP for tab completing when there is no full command name
          */
         String str = i.substring(0, positionSinceStartedTabbing);
-        if (str.length() == 0) return CommandDefinition.HELP.tabComplete(0, "");
-
         String[] words = str.split(" ");
-        if (words.length == 0) return CommandDefinition.HELP.tabComplete(0, "");
 
         String commandNameStart = words[0];
         boolean newWord = isNewWord();
         int wordIndex = getRawCursorWordIndex(positionSinceStartedTabbing, words);
-
-        if (wordIndex == 0) {
-            List<String> commandSuggestions = CommandDefinition.HELP.tabComplete(0, commandNameStart);
-            if (!commandSuggestions.contains(commandNameStart)) return commandSuggestions;
-        }
-
         String beginning = wordIndex < words.length ? words[wordIndex] : "";
-        int argIndex = (newWord ? words.length : words.length-1) - 1; // - 1 to exclude the command name
-        try {
-            CommandDefinition commandDefinition = CommandDefinition.forName(commandNameStart);
-            return commandDefinition.tabComplete(argIndex, beginning);
-        } catch (NoSuchElementException e) {
-            return new ArrayList<>();   // the first word isn't a command (user entered it wrong)
+
+        if (str.length() == 0 || words.length == 0 || wordIndex == 0) {
+            suggestions = CommandDefinition.HELP.tabComplete(0);
+        } else {
+            try {
+                int argIndex = (newWord ? words.length : words.length - 1) - 1; // - 1 to exclude the command name
+                CommandDefinition commandDefinition = CommandDefinition.forName(commandNameStart);
+                if (!Command.validateArgumentCount(commandDefinition, argIndex+1)) return null;  // silently ignore
+                suggestions = commandDefinition.tabComplete(argIndex);
+            } catch (NoSuchElementException e) {
+                return new ArrayList<>();   // the first word isn't a command (user entered it wrong)
+            }
         }
 
+        // filter and return
+        for (int i = 0; i < suggestions.size(); i++) {
+            if (!suggestions.get(i).toLowerCase().startsWith(beginning.toLowerCase()) // - doesn't start with
+                    || suggestions.get(i).equalsIgnoreCase(beginning))                // - is exactly
+                suggestions.set(i, null);    // delete
+        }
+        suggestions.removeAll(Collections.singleton(null));
+        return suggestions;
     }
     private static int floorToWord(int c) {
         if (isNewWord()) return p; // if cursor (`p`) is at a new word, that's the beginning of the word
@@ -300,10 +309,11 @@ public class Console {
     }
     /** "raw" because it doesn't account for trailing spaces */
     private static int getRawCursorWordIndex(int c, String[] words) {
-        boolean newWord = isNewWord();
+        boolean newWord = isNewWord(false, c);
         int accumulatedLength = 0;
         for (int w=0; w<words.length; w++) {
-            accumulatedLength += words[w].length();
+            boolean trailngSpace = w < words.length-1;  // TODO: correct?
+            accumulatedLength += (words[w] + (trailngSpace?" ":"")).length();
             if (c < accumulatedLength+" ".length()+1) return w+(newWord?1:0);
         }
         throw new RuntimeException("yeah... something went wrong");

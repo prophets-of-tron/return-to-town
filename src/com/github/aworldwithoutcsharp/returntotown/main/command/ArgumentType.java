@@ -8,6 +8,14 @@ public enum ArgumentType {
         public boolean validateArgument(String value) {
             return true;    // TODO: change when we have an Entity enum
         }
+    }, DIRECTION {
+        @Override
+        public boolean validateArgument(String value) {
+            for (String direction : new String[]{"east", "north", "west", "south"}) {
+                if (!direction.equalsIgnoreCase(value)) return false;
+            }
+            return true;
+        }
     }, COMMAND_NAME {
         /**
          *

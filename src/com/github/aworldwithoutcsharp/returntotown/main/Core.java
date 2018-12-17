@@ -1,6 +1,8 @@
 package com.github.aworldwithoutcsharp.returntotown.main;
 
+import com.github.aworldwithoutcsharp.returntotown.main.entities.Player;
 import com.github.aworldwithoutcsharp.returntotown.main.io.Console;
+import com.github.aworldwithoutcsharp.returntotown.main.scenes.game.Game;
 import com.github.aworldwithoutcsharp.returntotown.main.scenes.tutorial.Tutorial;
 
 /*
@@ -47,6 +49,13 @@ import com.github.aworldwithoutcsharp.returntotown.main.scenes.tutorial.Tutorial
  */
 
 public class Core {
+    public static boolean inTutorial;
+    public static Player getPlayer() {
+        // no player in tutorial; player isn't technically an "entity" there, just a virtual agent
+        if (inTutorial) throw new IllegalStateException("This command does not apply to the tutorial");
+        return Game.instance.player;
+    }
+
     private static void init() {
         Console.init("Return to Town", new Runnable() {
             @Override
@@ -56,7 +65,10 @@ public class Core {
         });
     }
     private static void runGame() {
-        Tutorial.run();
+        inTutorial = true;
+        new Tutorial().run();
+        inTutorial = false;
+        // new Game().run();
     }
 
     public static void exit() {

@@ -22,7 +22,7 @@ public class ProjectData {
 
         public static class TileData {
             @JsonProperty
-            public String intro, observe, search, interact;
+            public String intro, observe, interact;
         }
     }
     public static class TutorialData {

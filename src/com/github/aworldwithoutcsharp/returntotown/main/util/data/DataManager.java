@@ -7,8 +7,6 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.io.File;
 import java.io.IOException;
 
-;
-
 public class DataManager {
     private static ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
     private static File file = new File("res/getData.yml");
